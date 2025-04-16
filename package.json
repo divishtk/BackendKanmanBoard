@@ -1,0 +1,27 @@
+{
+  "name": "backendkamanboard",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "DivishtK",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run": "nodemon -r dotenv/config --experimental-json-modules index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "express-validator": "^7.2.1",
+    "mailgen": "^2.0.29",
+    "mongoose": "^8.13.2",
+    "nodemailer": "^6.10.1",
+    "nodemon": "^3.1.9"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  }
+}
