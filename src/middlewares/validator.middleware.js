@@ -1,8 +1,11 @@
 import { validationResult } from 'express-validator';
-import { ApiError } from '../utils/api-errors';
+import { ApiError } from '../utils/api-errors.js';
 
 export const validate = (req, resp, next) => {
   const errors = validationResult(req);
+
+  console.log(errors)
+
   if (errors.isEmpty()) {
     return next();
   }
@@ -13,6 +16,8 @@ export const validate = (req, resp, next) => {
       [err.path]: err.msg,
     }),
   );
+
+  console.log(extractedErrors)
 
   throw new ApiError(401, 'Received Data is not valid', extractedErrors);
 };

@@ -1,4 +1,4 @@
-import moongoose from 'mongoose';
+import moongoose, { Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -6,13 +6,16 @@ import crypto from 'crypto';
 const userSchema = new Schema(
     {
         avatar: {
-            url: String,
-            localpath: String,
+           url:{
+                type: String,
+                default: 'https://placehold.co/600x400',
+            },
+            localpath: {
+                type: String,
+                default: '',
+           }
         },
-        default: {
-            url: 'https://placehold.co/600x400',
-            localpath: '',
-        },
+       
         username: {
             type: String,
             required: true,

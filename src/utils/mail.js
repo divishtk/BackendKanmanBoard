@@ -13,6 +13,31 @@ const sendMail = async (options) => {
   var emailText = mailGenerator.generatePlaintext(options.mailGenContent);
   var emailText = mailGenerator.generate(options.mailGenContent);
 
+  const mailTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT, 10),
+    secure: false,
+    requireTLS: true,
+    auth: {
+      user: process.env.SMTP_MAIL,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+
+  const mail = {
+    from: process.env.SMTP_EMAIL,
+    to: options.email,
+    subject: options.subject,
+    text: emailText,
+    html: emailText,
+  };
+
+  try {
+    await mailTransporter.sendMail(mail);
+    console.log('Email sent successfully');
+  } catch (error) {
+    console.error('Error sending email:', error);
+  }
 };
 
 const emailVerificationMailGenContent = (username, verificationUrl) => {
@@ -34,7 +59,35 @@ const emailVerificationMailGenContent = (username, verificationUrl) => {
   };
 };
 
+const forgotPasswordMailGenContent = (username, passwordResetUrl) => {
+  return {
+    body: {
+      name: username,
+      intro: 'We got a request to reset your password.',
+      action: {
+        instructions: 'To reset your password, please click the button below:',
+        button: {
+          color: '#22BC66',
+          text: 'Reset your password',
+          link: passwordResetUrl,
+        },
+      },
+      outro: 'Need help please contact us further!',
+    },
+  };
+};
 
 // sendMail({
-//     email: userLoginValidator
-// })
+//   email: user.email,
+//   subject: 'Verify!',
+//   mailGenContent: emailVerificationMailGenContent(
+//     user.username,
+//     verificationUrl,
+//   ),
+// });
+
+export {
+  emailVerificationMailGenContent,
+  forgotPasswordMailGenContent,
+  sendMail,
+};
