@@ -10,6 +10,7 @@ const sendMail = async (options) => {
     },
   });
 
+  //generate plantext of email for browser that doesnot support HTML
   var emailText = mailGenerator.generatePlaintext(options.mailGenContent);
   var emailText = mailGenerator.generate(options.mailGenContent);
 
@@ -58,6 +59,9 @@ const emailVerificationMailGenContent = (username, verificationUrl) => {
     },
   };
 };
+
+
+
 
 const forgotPasswordMailGenContent = (username, passwordResetUrl) => {
   return {
