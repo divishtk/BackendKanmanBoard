@@ -50,53 +50,90 @@ const registerUser = asyncHandler(async (req, res) => {
     });
 
     return res
-    .status(200)
-    .json(new ApiResponse(200, "User registed check email for verification"))
+      .status(200)
+      .json(new ApiResponse(200, 'User registed check email for verification'));
   } catch (error) {
     return res
-    .status(400)
-    .json(new ApiError(200, "Email verified succesfully"))
+      .status(400)
+      .json(new ApiError(200, 'Email verified succesfully'));
   }
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
-  
   const { token } = req.query;
   if (!token) {
     throw new ApiError(400, 'Token invalid');
   }
 
   //validate token
-  const hashedToken = crypto
-    .createHash('sha256')
-    .update(token)
-    .digest('hex');
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const user = await USER.findOne({
-      emailVerificationToken: hashedToken,
-      emailVerificationExpiry :{
-        $gt: Date.now(),
-      }
-    })
+  const user = await USER.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpiry: {
+      $gt: Date.now(),
+    },
+  });
 
-    if(!user){
-      throw new ApiError(400, 'Token is expired, kindly generate new verification link');
-    }
+  if (!user) {
+    throw new ApiError(
+      400,
+      'Token is expired, kindly generate new verification link',
+    );
+  }
 
-    user.isEmailVerified = true ;
-    user.emailVerificationToken = undefined ;
-    user.emailVerificationExpiry = undefined ;
+  user.isEmailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpiry = undefined;
 
-    await user.save() ;
+  await user.save();
 
-    return res
+  return res
     .status(200)
-    .json(new ApiResponse(200, "Email verified succesfully"))
-
+    .json(new ApiResponse(200, 'Email verified succesfully'));
 });
 
-const resendVerificationEmail = asyncHandler(async (req, resp) => {
-  const { email, username, password, role } = req.body;
+const resendVerificationEmail = asyncHandler(async (req, res) => {
+  console.log("1")
+  const { email } = req.body;
+  if (!email) {
+    throw new ApiError(401, 'Kindly provide email id!');
+  }
+
+  const user = await USER.findOne({
+    email,
+  });
+
+  if (!user) {
+    throw new ApiError(401, 'You are not registered, please create account');
+  }
+
+  if (user.isEmailVerified) {
+    throw new ApiError(400, 'Your email is already verified');
+  }
+
+    const { unhashedToken, hashedToken, tokenExpiry } =  user.generateTemporaryToken();
+    user.emailVerificationToken = hashedToken;
+    user.emailVerificationExpiry = tokenExpiry;
+
+    await user.save({ validateBeforeSave: false })
+
+  const verificationUrl = `${process.env.FRONTEND_URL}/api/v1/auth/verify-email/?token=${unhashedToken}&id=${user._id}`;
+  const mailGenContent = emailVerificationMailGenContent(
+    user.username,
+    verificationUrl,
+  );
+
+  await sendMail({
+    email: user.email,
+    subject: 'Verification email resent successfully',
+    mailGenContent,
+  });
+
+  return res.status(200).json(
+    new ApiResponse(200,"Verification email resent successfully")
+  )
+
 });
 
 const logoutUser = asyncHandler(async (req, resp) => {
@@ -119,4 +156,4 @@ const getCurrentProfile = asyncHandler(async (req, resp) => {
   const { email, username, password, role } = req.body;
 });
 
-export { registerUser, verifyEmail };
+export { registerUser, verifyEmail, resendVerificationEmail };
