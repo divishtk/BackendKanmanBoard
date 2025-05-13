@@ -2,10 +2,11 @@ import { USER } from '../models/user.models.js';
 import { asyncHandler } from '../utils/async-handler.js';
 import { emailVerificationMailGenContent, sendMail } from '../utils/mail.js';
 import { ApiError } from '../utils/api-errors.js';
+import { ApiResponse } from '../utils/api-response.js';
+import crypto from 'crypto';
 
-const registerUser = asyncHandler(async (req, resp) => {
+const registerUser = asyncHandler(async (req, res) => {
   const { email, username, fullname, password } = req.body;
-
 
   const existingUser = await USER.findOne({
     $or: [{ email }, { username }],
@@ -21,16 +22,15 @@ const registerUser = asyncHandler(async (req, resp) => {
     password,
   });
 
+  const createdUser = await USER.findById(user._id).select('-password');
 
-  const createdUser = await USER.findById(user._id).select("-password")
-
-  if (!createdUser) { 
+  if (!createdUser) {
     throw new ApiError(500, 'Error creating user');
   }
 
-
   //Generate token for email verification
-  const { unhashedToken, hashedToken, tokenExpiry } = user.generateTemporaryToken();
+  const { unhashedToken, hashedToken, tokenExpiry } =
+    user.generateTemporaryToken();
   user.emailVerificationToken = hashedToken;
   user.emailVerificationExpiry = tokenExpiry;
   await user.save();
@@ -49,29 +49,50 @@ const registerUser = asyncHandler(async (req, resp) => {
       mailGenContent,
     });
 
-    return resp.status(201).json({
-      message:
-        'User registered successfully. Please check your email for verification link.',
-      user: {
-        id: user._id,
-        email: user.email,
-        username: user.username,
-      },
-    });
+    return res
+    .status(200)
+    .json(new ApiResponse(200, "User registed check email for verification"))
   } catch (error) {
-    return resp.status(500).json({
-      message: 'Error sending verification email',
-      error: error.message,
-    });
+    return res
+    .status(400)
+    .json(new ApiError(200, "Email verified succesfully"))
   }
 });
 
+const verifyEmail = asyncHandler(async (req, res) => {
+  
+  const { token } = req.query;
+  if (!token) {
+    throw new ApiError(400, 'Token invalid');
+  }
 
+  //validate token
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(token)
+    .digest('hex');
 
+    const user = await USER.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpiry :{
+        $gt: Date.now(),
+      }
+    })
 
+    if(!user){
+      throw new ApiError(400, 'Token is expired, kindly generate new verification link');
+    }
 
-const verifyEmail = asyncHandler(async (req, resp) => {
-  const { email, username, password, role } = req.body;
+    user.isEmailVerified = true ;
+    user.emailVerificationToken = undefined ;
+    user.emailVerificationExpiry = undefined ;
+
+    await user.save() ;
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, "Email verified succesfully"))
+
 });
 
 const resendVerificationEmail = asyncHandler(async (req, resp) => {
@@ -98,4 +119,4 @@ const getCurrentProfile = asyncHandler(async (req, resp) => {
   const { email, username, password, role } = req.body;
 });
 
-export { registerUser };
+export { registerUser, verifyEmail };

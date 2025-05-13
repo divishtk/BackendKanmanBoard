@@ -1,3 +1,4 @@
+import e from 'express';
 import Mailgen from 'mailgen';
 import nodemailer from 'nodemailer';
 
@@ -5,14 +6,14 @@ const sendMail = async (options) => {
   const mailGenerator = new Mailgen({
     theme: 'default',
     product: {
-      name: 'Task Manager',
-      link: 'https://google.com',
+      name: 'Kanban Board',
+      link: 'https://divishtkori.me',
     },
   });
 
   //generate plantext of email for browser that doesnot support HTML
-  var emailText = mailGenerator.generatePlaintext(options.mailGenContent);
-  var emailText = mailGenerator.generate(options.mailGenContent);
+  var emailTextPlainTxt = mailGenerator.generatePlaintext(options.mailGenContent);
+  var emailTextHtml = mailGenerator.generate(options.mailGenContent);
 
   const mailTransporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -29,8 +30,8 @@ const sendMail = async (options) => {
     from: process.env.SMTP_EMAIL,
     to: options.email,
     subject: options.subject,
-    text: emailText,
-    html: emailText,
+    text: emailTextPlainTxt,
+    html: emailTextHtml,
   };
 
   try {
@@ -45,7 +46,7 @@ const emailVerificationMailGenContent = (username, verificationUrl) => {
   return {
     body: {
       name: username,
-      intro: 'Welcome to Task Manager! We are excited to have you on board.',
+      intro: 'Welcome to KanbanBoard! We are excited to have you on board.',
       action: {
         instructions:
           'To get started with your account, please verify your email address by clicking the button below:',
