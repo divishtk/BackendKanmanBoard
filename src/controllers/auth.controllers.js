@@ -203,7 +203,7 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
+  
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -222,4 +222,4 @@ const getCurrentProfile = asyncHandler(async (req, res) => {
   const { email, username, password, role } = req.body;
 });
 
-export { registerUser, verifyEmail, resendVerificationEmail, loginUser };
+export { registerUser, verifyEmail, resendVerificationEmail, loginUser ,logoutUser };
