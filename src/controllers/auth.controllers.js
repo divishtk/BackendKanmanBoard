@@ -5,6 +5,27 @@ import { ApiError } from '../utils/api-errors.js';
 import { ApiResponse } from '../utils/api-response.js';
 import crypto from 'crypto';
 
+const generateAccessAndRefereshTokens = async (userId) => {
+  try {
+    const user = await USER.findById(userId);
+    const accessToken = await user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
+    let refreshTokenExpiry;
+    refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    user.refreshToken = refreshToken;
+    user.refreshTokenExpiry = refreshTokenExpiry;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      'Something went wrong while generating referesh and access token',
+    );
+  }
+};
+
 const registerUser = asyncHandler(async (req, res) => {
   const { email, username, fullname, password } = req.body;
 
@@ -94,7 +115,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
 });
 
 const resendVerificationEmail = asyncHandler(async (req, res) => {
-  console.log("1")
+  console.log('1');
   const { email } = req.body;
   if (!email) {
     throw new ApiError(401, 'Kindly provide email id!');
@@ -112,11 +133,12 @@ const resendVerificationEmail = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Your email is already verified');
   }
 
-    const { unhashedToken, hashedToken, tokenExpiry } =  user.generateTemporaryToken();
-    user.emailVerificationToken = hashedToken;
-    user.emailVerificationExpiry = tokenExpiry;
+  const { unhashedToken, hashedToken, tokenExpiry } =
+    user.generateTemporaryToken();
+  user.emailVerificationToken = hashedToken;
+  user.emailVerificationExpiry = tokenExpiry;
 
-    await user.save({ validateBeforeSave: false })
+  await user.save({ validateBeforeSave: false });
 
   const verificationUrl = `${process.env.FRONTEND_URL}/api/v1/auth/verify-email/?token=${unhashedToken}&id=${user._id}`;
   const mailGenContent = emailVerificationMailGenContent(
@@ -130,30 +152,74 @@ const resendVerificationEmail = asyncHandler(async (req, res) => {
     mailGenContent,
   });
 
-  return res.status(200).json(
-    new ApiResponse(200,"Verification email resent successfully")
-  )
-
+  return res
+    .status(200)
+    .json(new ApiResponse(200, 'Verification email resent successfully'));
 });
 
-const logoutUser = asyncHandler(async (req, resp) => {
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, username, password } = req.body;
+
+  const user = await USER.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(404, 'User does not exist');
+  }
+
+  const isPasswordValid = await user.isPasswordCorrect(password);
+
+  if (!isPasswordValid) {
+    throw new ApiError(401, 'Invalid user credentials');
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+    user._id,
+  );
+  const loggedInUser = await USER.findById(user._id).select(
+    '-password -refreshToken',
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+  };
+
+  return res
+    .status(200)
+    .cookie('accessToken', accessToken, options)
+    .cookie('refreshToken', refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        },
+        'User logged In Successfully',
+      ),
+    );
+});
+
+const logoutUser = asyncHandler(async (req, res) => {
   const { email, username, password, role } = req.body;
 });
 
-const refreshAccessToken = asyncHandler(async (req, resp) => {
+const refreshAccessToken = asyncHandler(async (req, res) => {
   const { email, username, password, role } = req.body;
 });
 
-const forgotPasswordRequest = asyncHandler(async (req, resp) => {
+const forgotPasswordRequest = asyncHandler(async (req, res) => {
   const { email, username, password, role } = req.body;
 });
 
-const changeCurrentPassword = asyncHandler(async (req, resp) => {
+const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { email, username, password, role } = req.body;
 });
 
-const getCurrentProfile = asyncHandler(async (req, resp) => {
+const getCurrentProfile = asyncHandler(async (req, res) => {
   const { email, username, password, role } = req.body;
 });
 
-export { registerUser, verifyEmail, resendVerificationEmail };
+export { registerUser, verifyEmail, resendVerificationEmail, loginUser };
