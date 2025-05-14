@@ -319,12 +319,21 @@ const passwordReset = asyncHandler(async (req, res) => {
 
 });
 
-const changeCurrentPassword = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
-});
+// const changeCurrentPassword = asyncHandler(async (req, res) => {
+//   const { email, username, password, role } = req.body;
+// });
 
 const getCurrentProfile = asyncHandler(async (req, res) => {
-  const { email, username, password, role } = req.body;
+
+ const getUser =  await USER.findById(req.user._id) ;
+ return res
+ .status(200)
+ .json(new ApiResponse(
+     200,
+     getUser,
+     "User fetched successfully"
+ ))
+
 });
 
 export {
@@ -335,5 +344,6 @@ export {
   logoutUser,
   refreshAccessToken ,
   forgotPasswordRequest ,
-  passwordReset
+  passwordReset ,
+  getCurrentProfile
 };

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { forgotPasswordRequest, loginUser, logoutUser, passwordReset, refreshAccessToken, registerUser, resendVerificationEmail, verifyEmail } from "../controllers/auth.controllers.js";
+import { forgotPasswordRequest, getCurrentProfile, loginUser, logoutUser, passwordReset, refreshAccessToken, registerUser, resendVerificationEmail, verifyEmail } from "../controllers/auth.controllers.js";
 import { validate } from "../middlewares/validator.middleware.js";
 import { userRegisterationValidator } from "../validators/index.js";
 import { verifyJWT } from "../middlewares/verifyJwt.middleware.js";
@@ -14,6 +14,8 @@ router.route('/logout').post(verifyJWT,logoutUser);
 router.route('/refresh-accessToken').post(refreshAccessToken);
 router.route('/forgot-password-request').post(verifyJWT,forgotPasswordRequest);
 router.route('/reset-your-password').get(verifyJWT,passwordReset);
+router.route('/get-profile').get(verifyJWT,getCurrentProfile);
+
 
 
 
