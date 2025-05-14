@@ -44,7 +44,7 @@ const userSchema = new Schema(
             default: false,
         },
         forgotPasswordToken: {
-            type: Boolean,
+            type: String,
             default: false,
         },
         forgotPasswordExpiry: {
