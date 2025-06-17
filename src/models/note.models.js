@@ -1,4 +1,4 @@
-import moongoose from 'mongoose';
+import moongoose, { Schema } from 'mongoose';
 
 const projectNote = new Schema(
     {
