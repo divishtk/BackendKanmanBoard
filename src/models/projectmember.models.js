@@ -1,4 +1,4 @@
-import moongoose from 'mongoose';
+import moongoose, { Schema } from 'mongoose';
 import { AvailableUserRoles, USER_ROLES_ENUM } from '../utils/constants.js';
 
 

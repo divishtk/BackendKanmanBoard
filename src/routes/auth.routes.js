@@ -11,7 +11,7 @@ router.route('/verify-email').get(verifyEmail);
 router.route('/resend-verify-email').post(resendVerificationEmail);
 router.route('/login').post(loginUser);
 router.route('/logout').post(verifyJWT,logoutUser);
-router.route('/refresh-accessToken').post(refreshAccessToken);
+router.route('/refresh-accessToken').post(verifyJWT,refreshAccessToken);
 router.route('/forgot-password-request').post(verifyJWT,forgotPasswordRequest);
 router.route('/reset-your-password').get(verifyJWT,passwordReset);
 router.route('/get-profile').get(verifyJWT,getCurrentProfile);

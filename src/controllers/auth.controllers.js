@@ -12,7 +12,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
     const accessToken = await user.generateAccessToken();
     const refreshToken = await user.generateRefreshToken();
     let refreshTokenExpiry;
-    refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     user.refreshToken = refreshToken;
     user.refreshTokenExpiry = refreshTokenExpiry;
@@ -77,7 +77,7 @@ const registerUser = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(400)
-      .json(new ApiError(200, 'Email verified succesfully'));
+      .json(new ApiError(200, 'Something went wrong while registering'));
   }
 });
 
@@ -116,7 +116,6 @@ const verifyEmail = asyncHandler(async (req, res) => {
 });
 
 const resendVerificationEmail = asyncHandler(async (req, res) => {
-  console.log('1');
   const { email } = req.body;
   if (!email) {
     throw new ApiError(401, 'Kindly provide email id!');
@@ -243,7 +242,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
          // Check if the incoming refresh token matches the one in DB
          if (incommingRefreshToken !== user?.refreshToken) {
-          throw new ApiError(401, "Refresh token is expired or used")
+          throw new ApiError(401, "Refresh token is expired or used or old one")
       }
 
       const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
