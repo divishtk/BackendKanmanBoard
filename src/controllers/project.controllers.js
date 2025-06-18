@@ -1,3 +1,4 @@
+import { isMember } from '../../services/isMember.services.js';
 import { PROJECT } from '../models/project.models.js';
 import { PROJECTMEMBER } from '../models/projectmember.models.js';
 import { USER } from '../models/user.models.js';
@@ -65,29 +66,24 @@ const deleteProject = asyncHandler(async (req, res) => {
 const updateProject = asyncHandler(async (req, res) => {
     const { projectId } = req.params;
     const userId = req.user._id;
+    const { name, description } = req.body;
 
-    const projectMember = await PROJECTMEMBER.findOne({
-        user: userId,
-        project: projectId,
-    });
+
+    const projectMember = await isMember(userId , projectId) ;
+
     if (!projectMember) {
         throw new ApiError(403, 'You are not a member of this project!');
     }
     if (
-        projectMember.role !== USER_ROLES_ENUM.PROJECT_ADMIN ||
-        projectMember.role !== USER_ROLES_ENUM.ADMIN
+        projectMember.role !== USER_ROLES_ENUM.PROJECT_ADMIN
+        // || projectMember.role !== USER_ROLES_ENUM.ADMIN
     ) {
         throw new ApiError(403, 'You are not authorized to update this project!');
     }
 
-    const { name, description } = req.body;
-
-    // if(!name || !description) {
-    //     throw new ApiError(400, "Please fill all the fields");
-    // }
 
     const updatedProject = await PROJECT.findByIdAndUpdate(
-        id,
+        projectId,
         {
             name,
             description,

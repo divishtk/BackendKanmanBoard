@@ -52,4 +52,17 @@ const createProjectValidator = () =>{
     ]
 }
 
-export { userRegisterationValidator ,userLoginValidator , createProjectValidator}
+const updateProjectValidator = () =>{
+     return [
+        body('name')
+            .trim()
+            .notEmpty()
+            .withMessage('Project Name is required'),
+        body('description')
+            .trim()
+            .notEmpty()
+            .withMessage('Project Description is required')
+    ]
+}
+
+export { userRegisterationValidator ,userLoginValidator , createProjectValidator ,updateProjectValidator}
