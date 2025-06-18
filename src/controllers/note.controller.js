@@ -40,6 +40,11 @@ const getNotesById = asyncHandler(async (req, res) => {
 const createNote = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
   const { content } = req.body;
+  const userId = req.user._id;
+
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized request! Please login first.");
+    }
 
   const project = await PROJECT.findById(projectId);
   if (!project) {
