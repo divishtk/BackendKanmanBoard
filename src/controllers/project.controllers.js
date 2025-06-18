@@ -1,9 +1,10 @@
 import { PROJECT } from '../models/project.models.js';
 import { PROJECTMEMBER } from '../models/projectmember.models.js';
 import { USER } from '../models/user.models.js';
-import { ApiError } from '../utils/api-errors';
-import { ApiResponse } from '../utils/api-response';
-import { USER_ROLES_ENUM } from '../utils/constants';
+import { ApiError } from '../utils/api-errors.js';
+import { ApiResponse } from '../utils/api-response.js';
+import { asyncHandler } from '../utils/async-handler.js';
+import { USER_ROLES_ENUM } from '../utils/constants.js';
 
 const createProject = asyncHandler(async (req, res) => {
     const { name, description } = req.body;
@@ -19,6 +20,12 @@ const createProject = asyncHandler(async (req, res) => {
         description,
         createdBy: userId,
     });
+
+    await PROJECTMEMBER.create({
+        user : userId , 
+        project : project._id , 
+        role : USER_ROLES_ENUM.PROJECT_ADMIN
+    })
 
     return res
         .status(201)
@@ -307,7 +314,6 @@ const getAllProjects = asyncHandler(async (req, res) => {
 
 
 export { createProject, 
-    deleteProject,
     updateProject, 
     addProjectMember, 
     deleteProjectMember, 
