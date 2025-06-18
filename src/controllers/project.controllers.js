@@ -1,5 +1,6 @@
 import { PROJECT } from '../models/project.models.js';
 import { PROJECTMEMBER } from '../models/projectmember.models.js';
+import { USER } from '../models/user.models.js';
 import { ApiError } from '../utils/api-errors';
 import { ApiResponse } from '../utils/api-response';
 import { USER_ROLES_ENUM } from '../utils/constants';
@@ -25,37 +26,294 @@ const createProject = asyncHandler(async (req, res) => {
 });
 
 const deleteProject = asyncHandler(async (req, res) => {
-    const {projectId}  = req.params ; 
+    const { projectId } = req.params;
     const userId = req.user._id;
 
     const projectMember = await PROJECTMEMBER.findOne({
-        user : userId ,
-        project : projectId
-    }) ;
+        user: userId,
+        project: projectId,
+    });
 
-    if(!projectMember) {
-        throw new ApiError(404, "You are not part of this project") ;
+    if (!projectMember) {
+        throw new ApiError(404, 'You are not part of this project');
     }
 
-    if(projectMember.role!==USER_ROLES_ENUM.PROJECT_ADMIN || projectMember.role!==USER_ROLES_ENUM.ADMIN){
-                throw new ApiError(404, "You are not allowed to delete this project") ;
-    } 
-
-    const projectDelete = await PROJECT.findByIdAndDelete(projectId) ;
-    if(!projectDelete){
-                throw new ApiError(404, "Project could not be deleted!");
+    if (
+        projectMember.role !== USER_ROLES_ENUM.PROJECT_ADMIN ||
+        projectMember.role !== USER_ROLES_ENUM.ADMIN
+    ) {
+        throw new ApiError(404, 'You are not allowed to delete this project');
     }
 
-    return res.status(200).json(new ApiResponse(200, projectDelete, "Project deleted successfully!"))   
+    const projectDelete = await PROJECT.findByIdAndDelete(projectId);
+    if (!projectDelete) {
+        throw new ApiError(404, 'Project could not be deleted!');
+    }
 
+    return res
+        .status(200)
+        .json(new ApiResponse(200, projectDelete, 'Project deleted successfully!'));
 });
 
+const updateProject = asyncHandler(async (req, res) => {
+    const { projectId } = req.params;
+    const userId = req.user._id;
 
-const updateProject = asyncHandler(async (req, res) => {})
+    const projectMember = await PROJECTMEMBER.findOne({
+        user: userId,
+        project: projectId,
+    });
+    if (!projectMember) {
+        throw new ApiError(403, 'You are not a member of this project!');
+    }
+    if (
+        projectMember.role !== USER_ROLES_ENUM.PROJECT_ADMIN ||
+        projectMember.role !== USER_ROLES_ENUM.ADMIN
+    ) {
+        throw new ApiError(403, 'You are not authorized to update this project!');
+    }
+
+    const { name, description } = req.body;
+
+    // if(!name || !description) {
+    //     throw new ApiError(400, "Please fill all the fields");
+    // }
+
+    const updatedProject = await PROJECT.findByIdAndUpdate(
+        id,
+        {
+            name,
+            description,
+        },
+        { new: true },
+    );
+    if (!updatedProject) {
+        throw new ApiError(404, 'Project could not be updated!');
+    }
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, updatedProject, 'Project updated successfully!'),
+        );
+});
+
+const addProjectMember = asyncHandler(async (req, res) => {
+    const { projectId } = req.params;
+    const userId = req.user._id;
+
+    // if (!userId) {
+    //     throw new ApiError(401, 'Unauthorized request! Please login first.');
+    // }
+
+    // if (!id) {
+    //     throw new ApiError(400, 'Please provide a project id!');
+    // }
+
+    const projectMember = await PROJECTMEMBER.findOne({
+        user: userId,
+        project: projectId,
+    });
+    if (!projectMember) {
+        throw new ApiError(403, 'You are not a member of this project!');
+    }
+    if (projectMember.role !== USER_ROLES_ENUM.PROJECT_ADMIN) {
+        throw new ApiError(
+            403,
+            'You are not authorized to add members to this project!',
+        );
+    }
+    const { memberId } = req.body;
+    if (!memberId) {
+        throw new ApiError(400, 'Please provide a member id!');
+    }
+    const findprojectMember = await PROJECTMEMBER.findOne({
+        user: memberId,
+        project: id,
+    });
+    if (findprojectMember) {
+        throw new ApiError(400, 'This member is already a member of this project!');
+    }
+    const projectMemberAdd = await PROJECTMEMBER.create({
+        user: memberId,
+        project: id,
+    });
+    if (!projectMemberAdd) {
+        throw new ApiError(404, 'Project member could not be added!');
+    }
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                projectMemberAdd,
+                'Project member added successfully!',
+            ),
+        );
+});
+
+const deleteProjectMember = asyncHandler(async (req, res) => {
+    const { projectId } = req.params;
+    const userId = req.user._id;
+
+    // if (!userId) {
+    //     throw new ApiError(401, 'Unauthorized request! Please login first.');
+    // }
+
+    // if (!id) {
+    //     throw new ApiError(400, 'Please provide a project id!');
+    // }
+
+    const projectMember = await PROJECTMEMBER.findOne({
+        user: userId,
+        project: projectId,
+    });
+    if (!projectMember) {
+        throw new ApiError(403, 'You are not a member of this project!');
+    }
+    if (projectMember.role !== USER_ROLES_ENUM.PROJECT_ADMIN) {
+        throw new ApiError(
+            403,
+            'You are not authorized to delete members from this project!',
+        );
+    }
+    const projectMemberDelete = await PROJECTMEMBER.findByIdAndDelete(id);
+
+    if (!projectMemberDelete) {
+        throw new ApiError(404, 'Project member could not be deleted!');
+    }
+    // if (projectMemberDelete.user.toString() === userId.toString()) {
+    //     throw new ApiError(403, 'You cannot delete yourself from this project!');
+    // }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                projectMemberDelete,
+                'Project member deleted successfully!',
+            ),
+        );
+});
+
+const getProjectById = asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const userId = req.user._id
+
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized request! Please login first.");
+    }
+
+    if (!id) {
+        throw new ApiError(400, "Please provide a project id!");
+    }
+    const user = USER.findById(userId)
+    if (!user) {
+        throw new ApiError(404, "User not found!");
+    }
+    if (user.role !== USER_ROLES_ENUM.PROJECT_ADMIN || user.role !== USER_ROLES_ENUM.ADMIN) {
+        throw new ApiError(403, "You are not authorized to view all projects!");
+    }
+
+    const project = await Project.findById(id)
+    if (!project) {
+        throw new ApiError(404, "Project not found!");
+    }
+
+    return res.status(200).json(new ApiResponse(200, project, "Project found successfully!"))
+
+})
+const getAllProjectscreatedByaUser = asyncHandler(async (req, res) => {
+    const userId = req.user._id
+
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized request! Please login first.");
+    }
+
+    const projects = await PROJECT.find({ createdBy: userId })
+    if (!projects) {
+        throw new ApiError(404, "No projects found!");
+    }
+
+    return res.status(200).json(new ApiResponse(200, projects, "Projects found successfully!"))
+})
 
 
+const updateMemberRole = asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const userId = req.user._id
 
-export { createProject ,
-    deleteProject ,
+    // if(!userId) {
+    //     throw new ApiError(401, "Unauthorized request! Please login first.");
+    // }
 
- };
+    // if(!id) {
+    //     throw new ApiError(400, "Please provide a project id!");
+    // }
+
+    const projectMember = await ProjectMember.findOne({ user: userId, project: id })
+    if (!projectMember) {
+        throw new ApiError(403, "You are not a member of this project!");
+    }
+    if (projectMember.role !== USER_ROLES_ENUM.PROJECT_ADMIN) {
+        throw new ApiError(403, "You are not authorized to update members in this project!");
+    }
+    const { memberId, role } = req.body;
+    if (!memberId || !role) {
+        throw new ApiError(400, "Please provide a member id and role!");
+    }
+    const findprojectMember = await PROJECTMEMBER.findOne({ user: memberId, project: id })
+    if (!findprojectMember) {
+        throw new ApiError(404, "Requested member is not a member of this project! Please add him first.");
+    }
+
+    if (findprojectMember.role === USER_ROLES_ENUM.ADMIN) {
+        throw new ApiError(403, "You cannot update the role of an admin member!");
+    }
+    if (findprojectMember.role === role) {
+        throw new ApiError(400, "This member already has this role!");
+    }
+    const updatedProjectMember = await PROJECTMEMBER.findByIdAndUpdate(findprojectMember._id, { role }, { new: true })
+    if (!updatedProjectMember) {
+        throw new ApiError(404, "Project member could not be updated!");
+    }
+
+    return res.status(200).json(new ApiResponse(200, updatedProjectMember, "Project member updated successfully!"))
+
+})
+
+const getAllProjects = asyncHandler(async (req, res) => {
+    const userId = req.user._id
+
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized request! Please login first.");
+    }
+
+    const user = USER.findById(userId)
+    if (!user) {
+        throw new ApiError(404, "User not found!");
+    }
+    if (user.role !== USER_ROLES_ENUM.ADMIN) {
+        throw new ApiError(403, "You are not authorized to view all projects!");
+    }
+
+    const projects = await PROJECT.find({})
+    if (!projects) {
+        throw new ApiError(404, "No projects found!");
+    }
+
+    return res.status(200).json(new ApiResponse(200, projects, "Projects found successfully!"))
+})
+
+
+export { createProject, 
+    deleteProject,
+    updateProject, 
+    addProjectMember, 
+    deleteProjectMember, 
+    deleteProject,
+    getProjectById,
+    updateMemberRole, 
+    getAllProjects ,
+    getAllProjectscreatedByaUser
+};
