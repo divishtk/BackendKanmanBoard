@@ -4,15 +4,16 @@ import { ApiError } from '../src/utils/api-errors.js';
 
 const isMember = async (userId, projectId) => {
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
-        throw new ApiError(400, 'Invalid Project ID format.');
+        throw new ApiError(400, 'Invalid Project ID .');
     }
     const projectMember = await PROJECTMEMBER.findOne({
-        user: userId,
+        user: userId.toString(),
         project: projectId,
     });
 
+
     if (!projectMember) {
-        throw new ApiError(403, 'You are not a member of this project!');
+        throw new ApiError(403, 'This project is either deleted or you are not a member of it!');
     }
     return projectMember;
 };

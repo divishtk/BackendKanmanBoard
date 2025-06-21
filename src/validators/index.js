@@ -65,4 +65,17 @@ const updateProjectValidator = () =>{
     ]
 }
 
-export { userRegisterationValidator ,userLoginValidator , createProjectValidator ,updateProjectValidator}
+const updateMemberRoles = () =>{
+     return [
+        body('memberId')
+            .trim()
+            .notEmpty()
+            .withMessage('Member Id is required'),
+        body('role')
+            .trim()
+            .notEmpty()
+            .withMessage('Role is required')
+    ]
+}
+
+export { userRegisterationValidator ,userLoginValidator , createProjectValidator ,updateProjectValidator ,updateMemberRoles}

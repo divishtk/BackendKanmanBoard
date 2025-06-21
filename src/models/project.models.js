@@ -15,7 +15,7 @@ const projectSchema = new Schema({
     createdBy:{
         type: moongoose.Schema.Types.ObjectId,
         ref: 'USER',
-    }
+    } ,
 },{
     timestamps: true
 })
