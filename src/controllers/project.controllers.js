@@ -284,6 +284,23 @@ const getAllProjects = asyncHandler(async (req, res) => {
 })
 
 
+const getEnrolledProjects = asyncHandler(async (req, res) => {
+    const userId = req.user._id ; 
+
+    const getYourEnrolledProject = await PROJECTMEMBER.find({
+         user: userId,
+         role :USER_ROLES_ENUM.MEMBER
+    }).populate("project" , "name description");
+        if (!getYourEnrolledProject || getYourEnrolledProject.length === 0) {
+        return res.status(404).json(
+            new ApiResponse(404, [], "No enrolled projects found for the user."),
+        );
+        }
+    return res.status(200).json(new ApiResponse(200, getYourEnrolledProject,  "Enrolled projects fetched successfully."))
+
+
+})
+
 export { createProject, 
     updateProject, 
     addProjectMember, 
@@ -292,5 +309,6 @@ export { createProject,
     getProjectById,
     updateMemberRole, 
     getAllProjects ,
-    getAllProjectscreatedByaUser
+    getAllProjectscreatedByaUser ,
+    getEnrolledProjects
 };
