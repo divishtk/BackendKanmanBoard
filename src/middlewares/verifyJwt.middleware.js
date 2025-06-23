@@ -44,8 +44,8 @@ export const validateProjectPermission = (roles = [] ) => asyncHandler(async(req
     } ;
 
    const projectMembers  =  await PROJECTMEMBER.findOne({
-           project: mongoose.Types.ObjectId(projectId) ,
-           user:  mongoose.Types.ObjectId(req.user._id)
+           project: new mongoose.Types.ObjectId(projectId) ,
+           user:  new mongoose.Types.ObjectId(req.user._id)
     })
 
      if(!projectMembers) {

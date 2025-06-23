@@ -289,8 +289,15 @@ const getEnrolledProjects = asyncHandler(async (req, res) => {
 
     const getYourEnrolledProject = await PROJECTMEMBER.find({
          user: userId,
-         role :USER_ROLES_ENUM.MEMBER
+             $or :[
+                {
+                 role :USER_ROLES_ENUM.MEMBER} ,
+                {
+                 role :USER_ROLES_ENUM.PROJECT_ADMIN}],
     }).populate("project" , "name description");
+
+    console.log(getYourEnrolledProject)
+
         if (!getYourEnrolledProject || getYourEnrolledProject.length === 0) {
         return res.status(404).json(
             new ApiResponse(404, [], "No enrolled projects found for the user."),

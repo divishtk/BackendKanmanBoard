@@ -4,6 +4,7 @@ import authRouter from './routes/auth.routes.js';
 import projectRouter from './routes/project.routes.js' 
 import bodyParser from "body-parser"; // For parsing JSON bodies
 import cookieParser from "cookie-parser";
+import noteRouter from './routes/note.routes.js';
 
 const app = express();
 
@@ -16,5 +17,7 @@ app.use(bodyParser.json());
 app.use('/api/v1/healthcheck', healthCheckRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/project', projectRouter)
+app.use('/api/v1/note', noteRouter)
+
 
 export default app;
